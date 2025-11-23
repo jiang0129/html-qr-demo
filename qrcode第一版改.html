@@ -1,75 +1,363 @@
-<html>
-        <head>
-            <title>Html-Qrcode Demo 修正版</title>
-        </head>
-        <body>
-            <h1>Html-Qrcode Demo（穩定版本）</h1>
-            <div id="qr-reader" style="width:500px"></div>
-            <div id="qr-reader-results"></div>
 
-            <script src="https://unpkg.com/html5-qrcode"></script>
-            <script>
-                function docReady(fn) {
-                    if (document.readyState === "complete" ||
-                        document.readyState === "interactive") {
-                        setTimeout(fn, 1);
-                    } else {
-                        document.addEventListener("DOMContentLoaded", fn);
-                    }
+
+<html>
+
+<head>
+    <title>Html-Qrcode Demo 修正版</title>
+
+    <link rel="icon" type="image/png" href="/Content/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/Content/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/Content/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/Content/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/Content/favicon/site.webmanifest" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <meta name="robots" content="noindex">
+    <meta name="googlebot" content="noindex">
+    <link href="/Content/IconSetting.css?20171119" rel="stylesheet" />
+    <link href="/Content/jquery.datetimepicker.css" rel="stylesheet" />
+    <link href="/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="/Content/navbarfix.css" rel="stylesheet" />
+    <link href="/Content/TCIMainMenu.css?20181207" rel="stylesheet" />
+    <link href="/Content/font-awesome.min.css" rel="stylesheet" />
+    <link href="/Content/ui-grid.min.css" rel="stylesheet" />
+    <link href="/Content/select.min.css" rel="stylesheet" />
+    <link href="/Content/ng-table/ng-table.min.css" rel="stylesheet" />
+    <link href="/Content/main.css" rel="stylesheet" />
+    <link href="/Content/Common.css" rel="stylesheet" />
+    <link href="/Content/colorbox.css" rel="stylesheet" type="text/css">
+    <link href="/Content/_BillSignAnimate.css" rel="stylesheet" />
+    <link href="/Content/angular-ui-tree.min.css" rel="stylesheet" />
+    <link href=/Content/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="/Content/tci-all.css?2025/11/23 下午 04:09:45" rel="stylesheet" />
+    <link href="/Content/TCI_Notice.css" rel="stylesheet" />  <!--公告影片css-->
+    <!--tag input-->
+    <link rel="stylesheet" href="Content/ng-tags-input.min.css" />
+    <link href="/Content/EBCard/tci-all.css" rel="stylesheet" />
+    <link href="/Content/EBCard/backstage.css" rel="stylesheet" />
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style type="text/css">
+        body {
+            font-size: 10pt;
+            margin: 0px;
+            padding: 0px;
+            font-family: '微軟正黑體','Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .english-block .content_info,
+        .english-block .content_input {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100%;
+        }
+
+        .english-block .tci-form-control {
+            display: block !important;
+            width: 100% !important;
+        }
+
+        .english-block {
+            display: flex !important; /* 水平排列：圖片在左，右邊區塊在右 */
+            flex-direction: row !important;
+            align-items: flex-start; /* 上對齊圖片和右側區塊 */
+        }
+
+            .english-block .content_info {
+                display: flex !important;
+                flex-direction: column !important; /* 垂直排列每個 input 區塊 */
+                width: 60%; /* 右側區塊寬度，可調整 */
+                margin-left: 20px; /* 與圖片保持間距 */
+            }
+
+                .english-block .content_info .content_input {
+                    display: flex !important;
+                    flex-direction: column !important; /* 垂直排列 label + input */
+                    margin-bottom: 10px; /* 每個 input 區塊之間間距 */
                 }
 
-                docReady(async function () {
-                    const resultContainer = document.getElementById('qr-reader-results');
-                    let lastResult = "";
-                    let countResults = 0;
+            .english-block .content_pic {
+                width: 40%; /* 左側圖片區塊寬度，可調整 */
+                text-align: center;
+            }
+    </style>
+</head>
 
-                    // 🔥 強化版: 新增 onScanFailure → 保持掃描循環不會卡
-                    function onScanFailure(error) {
-                        // 靜默跳過，不要顯示
-                        // console.log("掃描失敗（忽略）", error);
-                    }
+<body>
 
-                    // 🔥 掃描成功
-                    function onScanSuccess(decodedText, decodedResult) {
-                        if (decodedText !== lastResult) {
-                            countResults++;
-                            lastResult = decodedText;
-                            resultContainer.innerHTML = "掃描到的內容：" + decodedText;
-                        }
-                    }
 
-                    // 🔥 強制選用後鏡頭（environment）
-                    let config = { facingMode: "environment" };
+    <div class="container-fluid" style="line-height: 2;">
 
-                    // 修正：把 Html5QrcodeScanner 的設定調整到最佳
-                    const enhancedConfig = {
-                        fps: 15,
-                        qrbox: { width: 250, height: 250 }, // 避免原本的 400 太大
-                        disableFlip: false, // 保留自動翻轉
-                        rememberLastUsedCamera: true
-                    };
+        <div class="pageHeader">
+            <span class="pageHeaderTitle" style="font-size: 24px;">
+                <b>音樂會報到</b>
+            </span>
 
-                    // 建立 scanner
-                    const scanner = new Html5QrcodeScanner(
-                        "qr-reader",
-                        enhancedConfig
-                    );
+            @*<span class="pageHeaderTitle" style="font-size: 20px;">
+                    <label class="tci-btn bg_darkblue openHistory" onclick="window.open('Instructions.pdf')">
+                        <i class="fa fa-question-circle" aria-hidden="true" style="width:20px"></i>
+                        說明文件下載(中英文)
+                    </label>
+                </span>*@
+        </div>
+        <hr>
+        <!-- 表單（已靜態化） -->
+        <section class="person container">
 
-                    // 👉 重要：使用 render 但補上 onScanFailure
-                    // Html5QrcodeScanner 原版不支援 onScanFailure，所以我們 patch 它
-                    const oldRender = scanner.render.bind(scanner);
+            @*<div class="person_info">
 
-                    scanner.render = function(patchedSuccessCallback) {
-                        // 用 patch 方式加入 failure callback
-                        return oldRender(
-                            patchedSuccessCallback,
-                            onScanFailure      // 🔥 加上 onScanFailure → 持續掃描
-                        );
-                    };
 
-                    // 啟動
-                    scanner.render(onScanSuccess);
-                });
-            </script>
-        </body>
-    </html>
+                <div class="person_img">
+                    <img src="~/Content/EBCard/TCILogo.png" id="imgEmpPic" />
+                </div>*@
+
+
+
+
+            @*<div style="text-align: center;">
+                    <label class="tci-btn tci-btn-orgin">
+                        <input id="file" style="display:none;" type="file">
+                        <span>更改照片</span>
+                    </label>
+
+                    <label class="tci-btn tci-btn-orgin">
+                        <input style="display:none;" type="button">
+                        <span>清除照片</span>
+                    </label>
+                </div>*@
+            @*</div>*@
+
+            <div class="content">
+
+                <!-- English Name -->
+                <div class="content_box tci-mb-3 well english-block">
+                    <!-- 左側 QR Code -->
+                    <div class="content_pic">
+                        @*<img src="~/Content/EBCard/TCILogo.png" id="imgEmpPic" style="width:150px; height:auto;" />*@
+                        <div id="qr-reader" style="width:250px; margin:auto;"></div>
+                        <div id="qr-reader-results" style="text-align:center; margin-top:10px;"></div>
+                    </div>
+
+
+                    <!-- 右側輸入區塊 -->
+                    <div class="content_info" style="margin-left:50px" >
+                        <div class="content_input">
+                            <div style="display:flex; flex-direction:row; align-items:center;">
+                                <span style="margin-right:10px; white-space:nowrap;">分類</span>
+                                <input type="text" class="tci-form-control gray" value="" disabled>
+                            </div>
+                        </div>
+                        <div class="content_input">
+                            <div style="display:flex; flex-direction:row; align-items:center;">
+                                <span style="margin-right:10px; white-space:nowrap;">公司</span>
+                                <input type="text" class="tci-form-control gray" value="" disabled>
+                            </div>
+                        </div>
+                        <div class="content_input">
+                            <div style="display:flex; flex-direction:row; align-items:center;">
+                                <span style="margin-right:10px; white-space:nowrap;">名稱</span>
+                                <input type="text" class="tci-form-control gray" value="" disabled>
+                            </div>
+                        </div>
+                        <div class="content_input">
+                            <div style="display:flex; flex-direction:row; align-items:center;">
+                                <span style="margin-right:10px; white-space:nowrap;">職稱</span>
+                                <input type="text" class="tci-form-control gray" value="" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @*<div class="person_text">
+                    <span>個人簡介：</span>
+                    <textarea class="tci-form-control">這裡是個人簡介的內容。</textarea>
+                </div>*@
+        </section>
+
+        <hr>
+
+        <section class="container">
+            <!--<div class="content">-->
+            <!-- English Name -->
+            <!--<div class="content_box tci-mb-3 well">
+                <div class="content_pic">
+                    <div class="content_img">
+                        <img src="/Content/EBCard/all-146.png" alt="English Name">
+                    </div>
+                    <div class="content_name"><span>English Name</span></div>
+                </div>
+
+                <div class="content_info">
+                    <div class="content_input">
+                        <span>Enter English Name</span>
+                        <input type="text" class="tci-form-control" placeholder="John Doe">
+                    </div>
+                </div>
+            </div>-->
+            <!-- Email -->
+            <!--<div class="content_box tci-mb-3 well">
+                <div class="content_pic">
+                    <div class="content_img">
+                        <img src="/Content/EBCard/BusinessCard-07.png" alt="Email">
+                    </div>
+                    <div class="content_name"><span>Email</span></div>
+                </div>
+
+                <div class="content_info">
+                    <div class="content_input">
+                        <input type="text" class="tci-form-control gray" value="sample@example.com" disabled>
+                    </div>
+                </div>
+            </div>-->
+            <!-- Mobile -->
+            <!--<div class="content_box tci-mb-3 well">
+                    <div class="content_pic">
+                        <div class="content_img">
+                            <img src="/Content/EBCard/BusinessCard_phone-21.png" alt="Mobile">
+                        </div>
+                        <div class="content_name"><span>Mobile</span></div>
+                    </div>
+
+                    <div class="content_info">
+                        <div class="content_input">
+                            <input type="text" class="tci-form-control gray" value="0912-345-678" disabled>
+                        </div>
+                    </div>
+                </div>
+
+            </div>-->
+
+            <div class="btnGroups">
+                <button class="tci-btn bg_lightgray">取消</button>
+                <button class="tci-btn bg_darkgreen">儲存</button>
+            </div>
+        </section>
+
+        <!-- Browsing History Modal -->
+        <div id="watchModel" class="modal fade">
+            <div class="modal-dialog modal-ku">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">瀏覽記錄</h4>
+                    </div>
+
+                    <div class="modal-body" id="listHistory">
+                        <!-- 靜態示例 -->
+                        <p>尚無瀏覽記錄</p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">關閉</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        function docReady(fn) {
+            if (document.readyState === "complete" ||
+                document.readyState === "interactive") {
+                setTimeout(fn, 1);
+            } else {
+                document.addEventListener("DOMContentLoaded", fn);
+            }
+        }
+
+        // 🔹 新增：先請求相機權限
+        async function requestCameraPermission() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                stream.getTracks().forEach(track => track.stop()); // 先停止鏡頭，只拿權限
+                return true;
+            } catch (err) {
+                console.error("無法取得相機權限", err);
+                return false;
+            }
+        }
+
+
+
+
+        docReady(async function () {
+            const permissionGranted = await requestCameraPermission();
+
+            if (!permissionGranted) {
+                return; // 沒權限就不執行 scanner
+            }
+
+            const resultContainer = document.getElementById('qr-reader-results');
+
+            let lastResult = "";
+            let countResults = 0;
+
+            // 🔥 強化版: 新增 onScanFailure → 保持掃描循環不會卡
+            function onScanFailure(error) {
+                // 靜默跳過，不要顯示
+                // console.log("掃描失敗（忽略）", error);
+            }
+
+            // 🔥 掃描成功
+            function onScanSuccess(decodedText, decodedResult) {
+                if (decodedText !== lastResult) {
+                    countResults++;
+                    lastResult = decodedText;
+                    resultContainer.innerHTML = "掃描到的內容：" + decodedText;
+                }
+            }
+
+            // 🔥 強制選用後鏡頭（environment）
+            let config = { facingMode: "environment" };
+
+            // 修正：把 Html5QrcodeScanner 的設定調整到最佳
+            const enhancedConfig = {
+                fps: 15,
+                qrbox: { width: 250, height: 250 }, // 避免原本的 400 太大
+                disableFlip: false, // 保留自動翻轉
+                rememberLastUsedCamera: true
+            };
+
+            //// 建立 scanner-----------------------------------------------------------
+            //const scanner = new Html5QrcodeScanner(
+            //    "qr-reader",
+            //    enhancedConfig
+            //);
+
+            //// 👉 重要：使用 render 但補上 onScanFailure
+            //// Html5QrcodeScanner 原版不支援 onScanFailure，所以我們 patch 它
+            //const oldRender = scanner.render.bind(scanner);
+
+            //scanner.render = function (patchedSuccessCallback) {
+            //    // 用 patch 方式加入 failure callback
+            //    return oldRender(
+            //        patchedSuccessCallback,
+            //        onScanFailure      // 🔥 加上 onScanFailure → 持續掃描
+            //    );
+            //};
+
+            //// 啟動
+            //scanner.render(onScanSuccess); -----------------------------------------------------------
+
+            const scanner = new Html5Qrcode("qr-reader");
+
+            scanner.start(
+                { facingMode: "environment" },
+                enhancedConfig,
+                onScanSuccess,
+                onScanFailure
+            );
+
+
+
+        });
+    </script>
+
+
+</body>
+</html>
+
+
