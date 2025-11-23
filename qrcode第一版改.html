@@ -1,0 +1,75 @@
+<html>
+        <head>
+            <title>Html-Qrcode Demo 修正版</title>
+        </head>
+        <body>
+            <h1>Html-Qrcode Demo（穩定版本）</h1>
+            <div id="qr-reader" style="width:500px"></div>
+            <div id="qr-reader-results"></div>
+
+            <script src="https://unpkg.com/html5-qrcode"></script>
+            <script>
+                function docReady(fn) {
+                    if (document.readyState === "complete" ||
+                        document.readyState === "interactive") {
+                        setTimeout(fn, 1);
+                    } else {
+                        document.addEventListener("DOMContentLoaded", fn);
+                    }
+                }
+
+                docReady(async function () {
+                    const resultContainer = document.getElementById('qr-reader-results');
+                    let lastResult = "";
+                    let countResults = 0;
+
+                    // 🔥 強化版: 新增 onScanFailure → 保持掃描循環不會卡
+                    function onScanFailure(error) {
+                        // 靜默跳過，不要顯示
+                        // console.log("掃描失敗（忽略）", error);
+                    }
+
+                    // 🔥 掃描成功
+                    function onScanSuccess(decodedText, decodedResult) {
+                        if (decodedText !== lastResult) {
+                            countResults++;
+                            lastResult = decodedText;
+                            resultContainer.innerHTML = "掃描到的內容：" + decodedText;
+                        }
+                    }
+
+                    // 🔥 強制選用後鏡頭（environment）
+                    let config = { facingMode: "environment" };
+
+                    // 修正：把 Html5QrcodeScanner 的設定調整到最佳
+                    const enhancedConfig = {
+                        fps: 15,
+                        qrbox: { width: 250, height: 250 }, // 避免原本的 400 太大
+                        disableFlip: false, // 保留自動翻轉
+                        rememberLastUsedCamera: true
+                    };
+
+                    // 建立 scanner
+                    const scanner = new Html5QrcodeScanner(
+                        "qr-reader",
+                        enhancedConfig
+                    );
+
+                    // 👉 重要：使用 render 但補上 onScanFailure
+                    // Html5QrcodeScanner 原版不支援 onScanFailure，所以我們 patch 它
+                    const oldRender = scanner.render.bind(scanner);
+
+                    scanner.render = function(patchedSuccessCallback) {
+                        // 用 patch 方式加入 failure callback
+                        return oldRender(
+                            patchedSuccessCallback,
+                            onScanFailure      // 🔥 加上 onScanFailure → 持續掃描
+                        );
+                    };
+
+                    // 啟動
+                    scanner.render(onScanSuccess);
+                });
+            </script>
+        </body>
+    </html>
