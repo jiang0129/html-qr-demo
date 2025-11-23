@@ -6,385 +6,97 @@
     <title>QR Code 掃描器</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      
       body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
+        min-height: 100vh;
+        margin: 0;
         padding: 20px;
+        background: #f0f0f0;
       }
-      
-      .container {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        max-width: 600px;
-        width: 100%;
-        padding: 30px;
-      }
-      
       h1 {
-        color: #333;
         margin-bottom: 10px;
         text-align: center;
       }
-      
-      .subtitle {
-        text-align: center;
-        color: #666;
-        margin-bottom: 20px;
-        font-size: 14px;
-      }
-      
-      .controls {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        justify-content: center;
-      }
-      
-      button {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        background-color: #667eea;
-        color: white;
-        cursor: pointer;
-        font-weight: bold;
-        transition: background-color 0.3s;
-      }
-      
-      button:hover {
-        background-color: #764ba2;
-      }
-      
-      button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-      }
-      
       #reader {
-        width: 100%;
-        background-color: #000;
+        width: 320px;
+        height: 320px;
         border-radius: 10px;
         overflow: hidden;
+        background-color: #000;
         margin-bottom: 20px;
-        aspect-ratio: 1;
       }
-      
-      .result-section {
-        background-color: #f5f5f5;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-      }
-      
-      .result-title {
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 10px;
-        font-size: 14px;
-        text-transform: uppercase;
-      }
-      
       #result {
         font-size: 18px;
-        color: #667eea;
-        word-break: break-all;
+        color: #333;
         min-height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .history {
-        margin-top: 15px;
-      }
-      
-      .history-title {
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 10px;
-        font-size: 14px;
-        text-transform: uppercase;
-      }
-      
-      #historyList {
-        list-style: none;
-        max-height: 150px;
-        overflow-y: auto;
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        border: 1px solid #ddd;
-      }
-      
-      #historyList li {
-        padding: 8px;
-        margin-bottom: 5px;
-        background-color: #f9f9f9;
-        border-left: 3px solid #667eea;
-        padding-left: 15px;
-        font-size: 14px;
-        color: #333;
-      }
-      
-      .status {
         text-align: center;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 15px;
-        font-size: 14px;
-        font-weight: bold;
-      }
-      
-      .status.success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-      }
-      
-      .status.error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-      }
-      
-      .status.info {
-        background-color: #d1ecf1;
-        color: #0c5460;
-        border: 1px solid #bee5eb;
+        word-break: break-all;
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <h1>🔍 QR Code 掃描器</h1>
-      <p class="subtitle">將 QR Code 對準鏡頭自動掃描解析</p>
-      
-      <div class="controls">
-        <button id="startBtn" onclick="startScanning()">開始掃描</button>
-        <button id="stopBtn" onclick="stopScanning()" disabled>停止掃描</button>
-        <button id="clearBtn" onclick="clearHistory()">清除歷史</button>
-      </div>
-      
-      <div id="statusMsg" class="status info" style="display: none;"></div>
-      
-      <div id="reader"></div>
-      
-      <div class="result-section">
-        <div class="result-title">掃描結果</div>
-        <div id="result">等待掃描...</div>
-      </div>
-      
-      <div class="history">
-        <div class="history-title">掃描歷史</div>
-        <ul id="historyList">
-          <li>尚無掃描紀錄</li>
-        </ul>
-      </div>
-    </div>
+    <h1>🔍 QR Code 掃描器</h1>
+    <div id="reader"></div>
+    <div id="result">等待掃描...</div>
 
     <script>
-      // 初始化變數
       let html5QrCode = null;
-      let isScanning = false;
-      const scanHistory = [];
-      const maxHistoryItems = 10;
-      
-      // 取得 DOM 元素
-      const resultDiv = document.getElementById('result');
-      const readerDiv = document.getElementById('reader');
-      const statusMsg = document.getElementById('statusMsg');
-      const startBtn = document.getElementById('startBtn');
-      const stopBtn = document.getElementById('stopBtn');
-      const historyList = document.getElementById('historyList');
-      
-      /**
-       * 顯示狀態訊息
-       */
-      function showStatus(message, type = 'info') {
-        statusMsg.textContent = message;
-        statusMsg.className = `status ${type}`;
-        statusMsg.style.display = 'block';
-        
-        if (type !== 'success') {
-          setTimeout(() => {
-            statusMsg.style.display = 'none';
-          }, 3000);
-        }
-      }
-      
-      /**
-       * 掃描成功回調
-       */
-      function onScanSuccess(decodedText, decodedResult) {
-        // 顯示掃描結果
-        resultDiv.innerHTML = `<strong>✓ ${decodedText}</strong>`;
-        showStatus('QR Code 掃描成功！', 'success');
-        
-        // 新增到歷史
-        addToHistory(decodedText);
-        
-        // 自動對焦增強
-        if (html5QrCode && html5QrCode.getState() === 2) {
-          // 掃描成功後繼續掃描
-        }
-      }
-      
-      /**
-       * 掃描失敗回調（靜默模式，不顯示每一次失敗）
-       */
-      function onScanFailure(error) {
-        // 靜默處理失敗，持續掃描
-      }
-      
-      /**
-       * 新增到掃描歷史
-       */
-      function addToHistory(text) {
-        // 移除舊的「尚無掃描紀錄」訊息
-        if (historyList.children.length === 1 && 
-            historyList.children[0].textContent === '尚無掃描紀錄') {
-          historyList.innerHTML = '';
-        }
-        
-        // 新增新紀錄
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('zh-TW');
-        const li = document.createElement('li');
-        li.textContent = `[${timeStr}] ${text}`;
-        
-        historyList.insertBefore(li, historyList.firstChild);
-        
-        // 保持最多 10 筆紀錄
-        while (historyList.children.length > maxHistoryItems) {
-          historyList.removeChild(historyList.lastChild);
-        }
-      }
-      
-      /**
-       * 清除掃描歷史
-       */
-      function clearHistory() {
-        historyList.innerHTML = '<li>尚無掃描紀錄</li>';
-        resultDiv.textContent = '等待掃描...';
-        showStatus('歷史已清除', 'info');
-      }
-      
-      /**
-       * 開始掃描
-       */
+
       async function startScanning() {
-        if (isScanning) return;
-        
+        if (html5QrCode) return;
+
         try {
-          showStatus('正在初始化攝影機...', 'info');
-          
-          // 取得可用攝影機
           const cameras = await Html5Qrcode.getCameras();
-          
           if (!cameras || cameras.length === 0) {
-            showStatus('未偵測到攝影機，請檢查設備權限', 'error');
+            alert("未偵測到攝影機，請檢查設備權限");
             return;
           }
-          
-          // 優先使用後置鏡頭（環境鏡頭），否則使用第一個
-          let cameraId = cameras[0].id;
-          const rearCamera = cameras.find(cam => 
-            cam.label.toLowerCase().includes('back') || 
+
+          // 優先後鏡頭
+          let rearCam = cameras.find(cam => 
+            cam.label.toLowerCase().includes('back') ||
             cam.label.toLowerCase().includes('rear') ||
             cam.label.toLowerCase().includes('environment')
           );
-          
-          if (rearCamera) {
-            cameraId = rearCamera.id;
-          }
-          
-          // 初始化掃描器
-          if (!html5QrCode) {
-            html5QrCode = new Html5Qrcode('reader');
-          }
-          
-          // 配置掃描參數（增強對焦）
+          let cameraConfig = rearCam 
+            ? { facingMode: { exact: "environment" } } 
+            : { facingMode: "environment" };
+
+          html5QrCode = new Html5Qrcode("reader");
+
           const qrConfig = {
-            fps: 15,                    // 每秒幀數，增加以提升反應速度
-            qrbox: { width: 250, height: 250 },  // QR Code 檢測區域
-            aspectRatio: 1.0,
-            disableFlip: false          // 允許翻轉以支援倒置的 QR Code
+            fps: 15,                     // 每秒幀數
+            qrbox: { width: 250, height: 250 },
+            disableFlip: false
           };
 
-          
-          // 配置攝影機（只能有一個 key）
-          // const config = {
-          //  deviceId: { exact: cameraId }
-          // };
-
-	  // 依設備支援情況決定攝影機設定
-          let config;
-
-// 如果找到後置鏡頭 → 優先使用 environment
-if (rearCamera) {
-  config = { facingMode: { exact: "environment" } };
-}
-// 若沒有後置鏡頭資訊 → 使用一般 environment（避免報錯）
-else {
-  config = { facingMode: "environment" };
-}
-
-		
-
-          // 啟動掃描
-          await html5QrCode.start(config, qrConfig, onScanSuccess, onScanFailure);
-          
-          isScanning = true;
-          startBtn.disabled = true;
-          stopBtn.disabled = false;
-          
-          showStatus('掃描已啟動，請將 QR Code 對準鏡頭', 'success');
-          
+          await html5QrCode.start(
+            cameraConfig,
+            qrConfig,
+            (decodedText) => {
+              document.getElementById('result').textContent = `掃描到: ${decodedText}`;
+            },
+            (error) => {
+              // 靜默失敗，不顯示
+            }
+          );
         } catch (err) {
-          console.error('啟動掃描失敗:', err);
-          showStatus(`無法啟動掃描: ${err.message}`, 'error');
+          console.error("掃描啟動失敗:", err);
+          alert("掃描啟動失敗: " + err);
         }
       }
-      
-      /**
-       * 停止掃描
-       */
-      async function stopScanning() {
-        if (!isScanning || !html5QrCode) return;
-        
-        try {
-          await html5QrCode.stop();
-          isScanning = false;
-          startBtn.disabled = false;
-          stopBtn.disabled = true;
-          showStatus('掃描已停止', 'info');
-        } catch (err) {
-          console.error('停止掃描失敗:', err);
-          showStatus('停止掃描時出錯', 'error');
-        }
-      }
-      
-      /**
-       * 頁面卸載時清理資源
-       */
+
+      // 啟動掃描
+      startScanning();
+
+      // 卸載頁面時釋放攝影機
       window.addEventListener('beforeunload', async () => {
-        if (html5QrCode && isScanning) {
-          try {
-            await html5QrCode.stop();
-          } catch (e) {
-            console.error('頁面卸載時停止掃描失敗:', e);
-          }
+        if (html5QrCode) {
+          try { await html5QrCode.stop(); } catch(e) {}
         }
       });
     </script>
